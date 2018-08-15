@@ -1,11 +1,16 @@
 package com.bluetooth.monitor;
 
 import android.util.Log;
-import android.widget.Toast;
-
+import android.view.View;
 import android.app.Activity;
- 
 import android.bluetooth.BluetoothAdapter;
+
+import android.widget.Toast;
+import android.widget.Spinner;
+import android.widget.ListView;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.AdapterView.OnItemSelectedListener;
 
 import android.os.Bundle;
 import android.os.IBinder;
@@ -18,7 +23,7 @@ import android.content.ComponentName;
 import android.content.ServiceConnection;
 import android.content.BroadcastReceiver;
 
-public class BluetoothMonitor extends Activity {
+public class BluetoothMonitor extends Activity implements OnItemSelectedListener {
 
   private boolean mBound;
   private Messenger mService = null;
@@ -63,6 +68,11 @@ public class BluetoothMonitor extends Activity {
     registerReceiver(BluetoothMonitorReceiver,
       new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED));
 
+    final String[] options = new String[]{"device1", "device2", "device3"};
+    Spinner dropdown = (Spinner)findViewById(R.id.device_list_menu);
+    ArrayAdapter adapter = new ArrayAdapter<String>(this, R.layout.device_list,R.id.device_list_textview, options);
+    dropdown.setAdapter(adapter);
+    dropdown.setOnItemSelectedListener(this);
   }
 
   @Override
@@ -77,19 +87,20 @@ public class BluetoothMonitor extends Activity {
     }
   }
 
-  /*private ServiceConnection mConnection = new ServiceConnection() {
-
-    @Override
-    public void onServiceDisconnected(ComponentName name) {
-      mService = null;
-      mBound   = false;
+  public void onItemSelected(AdapterView<?> parent, View v, int position, long id) {
+    switch(position) {
+      case 0:
+        // Whatever you want to happen when the first item gets selected
+        break;
+      case 1:
+        // Whatever you want to happen when the second item gets selected
+        break;
+      case 2:
+        // Whatever you want to happen when the thrid item gets selected
+        break;
     }
+  }
 
-    @Override
-    public void onServiceConnected(ComponentName name, IBinder service) {
-      mService = new Messenger(service);
-      mBound   = true;
-    }
-  };*/ 
+  public void onNothingSelected(AdapterView<?> parent) { }
 
 }
