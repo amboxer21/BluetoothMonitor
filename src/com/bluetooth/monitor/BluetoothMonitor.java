@@ -32,12 +32,15 @@ public class BluetoothMonitor extends Activity implements OnItemSelectedListener
   private static Spinner dropdown;
   private static ArrayAdapter adapter;
   private static BluetoothDevice device;
+  private static BluetoothAdapter bluetoothAdapter;
 
   private boolean mBound;
   private boolean message;
   private Messenger mService = null;
   private static long backPressedTime = 0;
   private static Intent bluetoothMonitorIntent;
+
+  private static String bluetoothMacAddress = "";
 
   private static final String TAG = "BluetoothMonitor";
 
@@ -74,9 +77,11 @@ public class BluetoothMonitor extends Activity implements OnItemSelectedListener
   };
 
   private String getBluetoothMacAddress() {
-    BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-    String bluetoothMacAddress = "";
-    return bluetoothAdapter.getName().toString();
+    return BluetoothAdapter.getDefaultAdapter().getAddress().toString();
+  }
+
+  private String getBluetoothName() {
+    return BluetoothAdapter.getDefaultAdapter().getName().toString();
   }
 
   @Override
@@ -109,7 +114,7 @@ public class BluetoothMonitor extends Activity implements OnItemSelectedListener
     registerReceiver(BluetoothMonitorReceiver,
       new IntentFilter(BluetoothDevice.ACTION_FOUND));
 
-    final String[] options = new String[]{getBluetoothMacAddress(), "device2", "device3"};
+    final String[] options = new String[]{getBluetoothName(), "device2", "device3"};
     dropdown = (Spinner)findViewById(R.id.device_list_menu);
     adapter  = new ArrayAdapter<String>(this, R.layout.device_list, R.id.device_list_textview, options);
     dropdown.setAdapter(adapter);
