@@ -66,9 +66,8 @@ public class BluetoothMonitor extends Activity implements OnItemSelectedListener
             break;
         }
       }
-      else if(action.equals(BluetoothDevice.ACTION_FOUND)) {
-        Log.d(TAG, "action.equals(BluetoothDevice.ACTION_FOUND)");
-        device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+      if(action.equals(BluetoothDevice.ACTION_FOUND)) {
+        //device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
         Toast.makeText(context, "Bluetooth device added!", Toast.LENGTH_LONG).show();
       } 
     }
@@ -77,7 +76,7 @@ public class BluetoothMonitor extends Activity implements OnItemSelectedListener
   private String getBluetoothMacAddress() {
     BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
     String bluetoothMacAddress = "";
-    return bluetoothAdapter.getAddress().toString();
+    return bluetoothAdapter.getName().toString();
   }
 
   @Override
