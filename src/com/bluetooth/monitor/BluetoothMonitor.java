@@ -3,18 +3,15 @@ package com.bluetooth.monitor;
 import android.util.Log;
 import android.view.View;
 import android.app.Activity;
-import android.bluetooth.BluetoothAdapter;
-
-import android.widget.Toast;
-import android.widget.Spinner;
-import android.widget.ListView;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.AdapterView.OnItemSelectedListener;
+import java.lang.reflect.Field;
 
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Messenger;
+import android.os.Build.VERSION_CODES;
+
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothAdapter;
 
 import android.content.Intent;
 import android.content.Context;
@@ -23,14 +20,29 @@ import android.content.ComponentName;
 import android.content.ServiceConnection;
 import android.content.BroadcastReceiver;
 
+import android.widget.Toast;
+import android.widget.Spinner;
+import android.widget.ListView;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.AdapterView.OnItemSelectedListener;
+
 public class BluetoothMonitor extends Activity implements OnItemSelectedListener {
 
+  private static Spinner dropdown;
+  private static ArrayAdapter adapter;
+  private static BluetoothDevice device;
+
   private boolean mBound;
+  private boolean message;
   private Messenger mService = null;
   private static long backPressedTime = 0;
   private static Intent bluetoothMonitorIntent;
 
-  private BroadcastReceiver BluetoothMonitorReceiver = new BroadcastReceiver() {    
+  private static final String TAG = "BluetoothMonitor";
+
+  private BroadcastReceiver BluetoothMonitorReceiver = new BroadcastReceiver() {
+
     @Override
     public void onReceive(Context context, Intent intent) {
 
@@ -53,14 +65,41 @@ public class BluetoothMonitor extends Activity implements OnItemSelectedListener
             Toast.makeText(context, "Turning Bluetooth on", Toast.LENGTH_LONG).show();
             break;
         }
+      }
+      else if(action.equals(BluetoothDevice.ACTION_FOUND)) {
+        Log.d(TAG, "action.equals(BluetoothDevice.ACTION_FOUND)");
+        device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+        Toast.makeText(context, "Bluetooth device added!", Toast.LENGTH_LONG).show();
       } 
     }
   };
+
+  private String getBluetoothMacAddress() {
+    BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+    String bluetoothMacAddress = "";
+    return bluetoothAdapter.getAddress().toString();
+  }
+
+  @Override
+  protected void onSaveInstanceState(Bundle savedInstanceState) {
+    savedInstanceState.putBoolean("message", message);
+    super.onSaveInstanceState(savedInstanceState);
+  }
+
+  @Override
+  public void onRestoreInstanceState(Bundle savedInstanceState) {
+    super.onRestoreInstanceState(savedInstanceState);
+    message = savedInstanceState.getBoolean("message");
+  }
 
   @Override
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.main);
+
+    if(savedInstanceState != null) {
+      message = savedInstanceState.getBoolean("message");
+    }
 
     Intent serviceIntent = new Intent(this, BluetoothMonitorService.class);
     startService(serviceIntent);
@@ -68,9 +107,12 @@ public class BluetoothMonitor extends Activity implements OnItemSelectedListener
     registerReceiver(BluetoothMonitorReceiver,
       new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED));
 
-    final String[] options = new String[]{"device1", "device2", "device3"};
-    Spinner dropdown = (Spinner)findViewById(R.id.device_list_menu);
-    ArrayAdapter adapter = new ArrayAdapter<String>(this, R.layout.device_list,R.id.device_list_textview, options);
+    registerReceiver(BluetoothMonitorReceiver,
+      new IntentFilter(BluetoothDevice.ACTION_FOUND));
+
+    final String[] options = new String[]{getBluetoothMacAddress(), "device2", "device3"};
+    dropdown = (Spinner)findViewById(R.id.device_list_menu);
+    adapter  = new ArrayAdapter<String>(this, R.layout.device_list, R.id.device_list_textview, options);
     dropdown.setAdapter(adapter);
     dropdown.setOnItemSelectedListener(this);
   }

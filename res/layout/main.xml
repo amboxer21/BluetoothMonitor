@@ -5,14 +5,6 @@
   android:layout_width="fill_parent"
   android:layout_height="fill_parent">
 
-  <!--<android.support.v7.widget.Toolbar
-    android:background="#3F51B5"
-    android:id="@+id/action_toolbar"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:label="@string/app_name">
-  </android.support.v7.widget.Toolbar>-->
-
   <Spinner
     android:id="@+id/device_list_menu"
     android:layout_height="40dp"
@@ -22,7 +14,6 @@
     android:layout_marginRight="5dp"
     android:layout_width="fill_parent"
     android:background="@drawable/device_list"/>
-    <!--android:layout_below="@+id/action_toolbar"-->
 
   <EditText
     android:textColor="#3F51B5"

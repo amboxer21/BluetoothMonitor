@@ -1,0 +1,8 @@
+*.sw*
+gen/*
+bin/*
+build.xml
+project.properties
+proguard-project.txt
+local.properties
+ant.properties
