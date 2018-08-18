@@ -1,14 +1,15 @@
 package com.bluetooth.monitor;
 
+import java.util.List;
 import android.util.Log;
 import android.view.View;
+import java.util.ArrayList;
 import android.app.Activity;
 import java.lang.reflect.Field;
 
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Messenger;
-import android.os.Build.VERSION_CODES;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothAdapter;
@@ -31,7 +32,7 @@ public class BluetoothMonitor extends Activity implements OnItemSelectedListener
 
   private static Spinner dropdown;
   private static ArrayAdapter adapter;
-  private static BluetoothDevice device;
+  private static BluetoothDevice bluetoothDevice;
   private static BluetoothAdapter bluetoothAdapter;
 
   private boolean mBound;
@@ -52,27 +53,30 @@ public class BluetoothMonitor extends Activity implements OnItemSelectedListener
       final String action = intent.getAction();
 
       if(action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
-        final int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE,
-          BluetoothAdapter.ERROR);
+        final int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
         switch(state) {
           case BluetoothAdapter.STATE_OFF:
             Toast.makeText(context, "Bluetooth off", Toast.LENGTH_LONG).show();
             break;
-          case BluetoothAdapter.STATE_TURNING_OFF:
-            Toast.makeText(context, "Turning Bluetooth off", Toast.LENGTH_LONG).show();
-            break;
           case BluetoothAdapter.STATE_ON:
             Toast.makeText(context, "Bluetooth on", Toast.LENGTH_LONG).show();
             break;
-          case BluetoothAdapter.STATE_TURNING_ON:
-            Toast.makeText(context, "Turning Bluetooth on", Toast.LENGTH_LONG).show();
-            break;
         }
       }
-      if(action.equals(BluetoothDevice.ACTION_FOUND)) {
-        //device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-        Toast.makeText(context, "Bluetooth device added!", Toast.LENGTH_LONG).show();
-      } 
+      if(action.equals(BluetoothDevice.ACTION_ACL_CONNECTED)) {
+        bluetoothDevice = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+        Toast.makeText(context, "Connected to "+bluetoothDevice.getName(), Toast.LENGTH_SHORT).show();
+				adapter.add(bluetoothDevice.getName());
+				adapter.notifyDataSetChanged();
+				dropdown.setAdapter(adapter);
+      }
+      else if(action.equals(BluetoothDevice.ACTION_ACL_DISCONNECTED)) {
+        bluetoothDevice = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+        Toast.makeText(context, "Disconnected from "+bluetoothDevice.getName(), Toast.LENGTH_SHORT).show();
+				adapter.remove(bluetoothDevice.getName());
+				adapter.notifyDataSetChanged();
+				dropdown.setAdapter(adapter);
+      }
     }
   };
 
@@ -108,17 +112,19 @@ public class BluetoothMonitor extends Activity implements OnItemSelectedListener
     Intent serviceIntent = new Intent(this, BluetoothMonitorService.class);
     startService(serviceIntent);
 
-    registerReceiver(BluetoothMonitorReceiver,
-      new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED));
+    IntentFilter filters = new IntentFilter();
+    filters.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
+    filters.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
+    filters.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
 
-    registerReceiver(BluetoothMonitorReceiver,
-      new IntentFilter(BluetoothDevice.ACTION_FOUND));
+    registerReceiver(BluetoothMonitorReceiver, filters);
 
-    final String[] options = new String[]{getBluetoothName(), "device2", "device3"};
     dropdown = (Spinner)findViewById(R.id.device_list_menu);
+    dropdown.setOnItemSelectedListener(this);
+    List<String> options = new ArrayList<String>();
+    options.add(getBluetoothName());
     adapter  = new ArrayAdapter<String>(this, R.layout.device_list, R.id.device_list_textview, options);
     dropdown.setAdapter(adapter);
-    dropdown.setOnItemSelectedListener(this);
   }
 
   @Override

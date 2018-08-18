@@ -3,7 +3,9 @@ package com.bluetooth.monitor;
 import android.util.Log;
 import android.app.Service;
 import android.widget.Toast;
+
 import android.content.Intent;
+import android.content.Context;;
 
 import android.os.Bundle;
 import android.os.Handler;
@@ -18,10 +20,30 @@ import android.telephony.TelephonyManager;
 public class BluetoothMonitorService extends Service {
 
   private static boolean is_screen_off = true;
+	private static final String TAG = "BluetoothMonitorService";
 
   @Override
   public IBinder onBind(Intent intent) {
     return mMessenger.getBinder();
+  }
+
+  @Override
+  public void onTaskRemoved(Intent rootIntent) {
+    super.onTaskRemoved(rootIntent);
+    Log.d(TAG,"onTaskRemoved()");
+  }
+ 
+  public void onCreate(Context context, Intent intent) {
+    try {
+      if(intent.getAction() != null) {
+        intent = new Intent(context, BluetoothMonitor.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        context.startActivity(intent);
+      }
+    }
+    catch(Exception e) {
+      e.printStackTrace();
+    }
   }
 
   @Override
