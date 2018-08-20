@@ -2,13 +2,16 @@ package com.bluetooth.monitor;
 
 import java.util.List;
 import android.util.Log;
-import android.view.View;
 import java.util.ArrayList;
 import android.app.Activity;
 import java.lang.reflect.Field;
 
+import android.view.View;
+import android.view.View.OnClickListener;
+
 import android.os.Bundle;
 import android.os.IBinder;
+import android.os.Message;
 import android.os.Messenger;
 
 import android.bluetooth.BluetoothDevice;
@@ -22,30 +25,44 @@ import android.content.ServiceConnection;
 import android.content.BroadcastReceiver;
 
 import android.widget.Toast;
+import android.widget.Button;
 import android.widget.Spinner;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.RelativeLayout;
 import android.widget.AdapterView.OnItemSelectedListener;
 
 public class BluetoothMonitor extends Activity implements OnItemSelectedListener {
 
-  private static Spinner dropdown;
-  private static EditText duration;
-
-  private static ArrayAdapter adapter;
-  private static Intent bluetoothMonitorIntent;
-  private static BluetoothDevice bluetoothDevice;
-  private static DatabaseHandler databaseHandler;
-  private static BluetoothAdapter bluetoothAdapter;
+  private Spinner dropdown;
+  private Button configure;
+  private EditText duration;
 
   private boolean mBound;
   private boolean message;
 
+  private String sAddress;
+  private String sDuration;
+  private String sAddressDb;
+  private String sDurationDb;
+  private String bluetoothMacAddress = "";
+
+  private ArrayAdapter adapter;
+  private SanityCheck sanityCheck;
   private Messenger mService = null;
-  private static long backPressedTime = 0;
-  private static String bluetoothMacAddress = "";
-  private static final String TAG = "BluetoothMonitor";
+  private Intent bluetoothMonitorIntent;
+  private BluetoothDevice bluetoothDevice;
+  private DatabaseHandler databaseHandler;
+  private BluetoothAdapter bluetoothAdapter;
+
+  private long backPressedTime = 0;
+  private final String TAG = "BluetoothMonitor BluetoothMonitor()";
+
+  public  static final int MSG_STRING = 0;
+  
+  private static Message msg;
 
   private BroadcastReceiver BluetoothMonitorReceiver = new BroadcastReceiver() {
 
@@ -67,29 +84,30 @@ public class BluetoothMonitor extends Activity implements OnItemSelectedListener
       }
       if(action.equals(BluetoothDevice.ACTION_ACL_CONNECTED)) {
         bluetoothDevice = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-        AppendDeviceToList(bluetoothDeviceName);
+        AppendDeviceToList(bluetoothDevice.getName());
         Toast.makeText(context, "Connected to "+bluetoothDevice.getName(), Toast.LENGTH_SHORT).show();
       }
       else if(action.equals(BluetoothDevice.ACTION_ACL_DISCONNECTED)) {
         bluetoothDevice = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+        sAddress = bluetoothDevice.getName();
 				removeDeviceFromList(bluetoothDevice.getName());
         Toast.makeText(context, "Disconnected from "+bluetoothDevice.getName(), Toast.LENGTH_SHORT).show();
       }
     }
   };
 
-  private String AppendDeviceToList(String bluetoothDeviceName) {
+  private void AppendDeviceToList(String bluetoothDeviceName) {
 		adapter.add(bluetoothDeviceName);
 		adapter.notifyDataSetChanged();
 		dropdown.setAdapter(adapter);
   }
 
-  private String removeDeviceFromList(String bluetoothDeviceName) {
+  private void removeDeviceFromList(String bluetoothDeviceName) {
 		adapter.remove(bluetoothDeviceName);
 		adapter.notifyDataSetChanged();
 		dropdown.setAdapter(adapter);
   }
-
+ 
   private String getBluetoothMacAddress() {
     return BluetoothAdapter.getDefaultAdapter().getAddress().toString();
   }
@@ -119,7 +137,16 @@ public class BluetoothMonitor extends Activity implements OnItemSelectedListener
       message = savedInstanceState.getBoolean("message");
     }
 
+    configure = (Button)findViewById(R.id.button);
+    dropdown  = (Spinner)findViewById(R.id.device_list_menu);
+    duration  = (EditText)findViewById(R.id.edit_timer_duration);
+
+    sAddress = getBluetoothName();
+
+    RelativeLayout mView = (RelativeLayout) findViewById(R.id.bluetooth_monitor);
+    sanityCheck = new SanityCheck(this);
     databaseHandler = new DatabaseHandler(getApplicationContext());
+    getSetDatabaseInfo(mView);
 
     Intent serviceIntent = new Intent(this, BluetoothMonitorService.class);
     startService(serviceIntent);
@@ -131,9 +158,6 @@ public class BluetoothMonitor extends Activity implements OnItemSelectedListener
 
     registerReceiver(BluetoothMonitorReceiver, filters);
 
-    dropdown = (Spinner)findViewById(R.id.device_list_menu);
-    duration = (EditText)findViewById(R.id.edit_timer_duration);
-
     dropdown.setOnItemSelectedListener(this);
     List<String> options = new ArrayList<String>();
     options.add(getBluetoothName());
@@ -142,14 +166,13 @@ public class BluetoothMonitor extends Activity implements OnItemSelectedListener
 
     configure.setOnClickListener(new OnClickListener() {
       @Override
-      public void onClick(View v) {
-        entrySanityCheck();
-        getSetDatabaseInfo(v);
+      public void onClick(View view) {
+        bluetoothMonitorSanityCheck(view);
       }
     });
   }
 
-  public void entrySanityCheck() {
+  public void bluetoothMonitorSanityCheck(View view) {
     try {
       sDuration = duration.getText().toString();
     }
@@ -157,17 +180,55 @@ public class BluetoothMonitor extends Activity implements OnItemSelectedListener
       e.printStackTrace();
       Log.e(TAG, "entrySanityCheck() Exception e => " + e.getMessage());
     }
-    if(SanityCheck.isEmpty(sAppPassword,"Password is empty.")) {
+    /*if(sAddress.equals(getBluetoothName())) {
+      Toast.makeText(getApplicationContext(), "Chose a device other than your own!", Toast.LENGTH_LONG).show(); 
+    }
+    else if(sanityCheck.isEmpty(sDuration)) {*/
+    if(sanityCheck.isEmpty(sDuration)) {
       return;
     }
-    else if(SanityCheck.isLessThan(sDuration,300,"Duration must be greater than 1 hour!") {
+    else if(sanityCheck.isLessThan(sDuration,300,"Duration must be greater than 300 seconds!")) {
       return;
     }
     else {
-      //databaseHandler.addFlashLightDatabase(new FlashLightDatabase(1, "yes", , sDuration));
+     getSetDatabaseInfo(view);
     }
   }
 
+  public void getSetDatabaseInfo(View view) throws NullPointerException {
+
+    List<BluetoothMonitorDatabase> bluetoothMonitorDatabase;
+
+    try {
+      bluetoothMonitorDatabase = databaseHandler.getAllBluetoothMonitorDatabase();
+    }
+    catch(NullPointerException e) {
+      Log.d(TAG, "bluetoothMonitorDatabase == null.");
+      return;
+    }
+
+    for(BluetoothMonitorDatabase item : bluetoothMonitorDatabase) {
+      sAddressDb  = item.getAddress().toString();
+      sDurationDb = String.valueOf(item.getDuration()).toString();
+
+      if(sDurationDb != null) {
+        duration.setText(sDurationDb);
+      }
+    }
+    if(!sanityCheck.isEmpty(sDuration)) {
+      if(sDurationDb != null && sAddressDb != null) {
+        Log.d(TAG, "Updating db with -> sAddressDb = " + sAddress + ": sDurationDb = " + sDuration);
+        Toast.makeText(getApplicationContext(), "Updating database.", Toast.LENGTH_LONG).show();
+        databaseHandler.updateBluetoothMonitorDatabase(new BluetoothMonitorDatabase(1, sAddress, Integer.parseInt(sDuration)));
+      }
+      else {
+        Log.d(TAG, "Creating db with -> sAddressDb = " + sAddress + ": sDurationDb = " + sDuration);
+        Toast.makeText(getApplicationContext(), "Creating database.", Toast.LENGTH_LONG).show();
+        databaseHandler.addBluetoothMonitorDatabase(new BluetoothMonitorDatabase(1, sAddress, Integer.parseInt(sDuration)));
+      }
+    }
+
+  }
 
   @Override
   public void onBackPressed() {
@@ -182,16 +243,19 @@ public class BluetoothMonitor extends Activity implements OnItemSelectedListener
   }
 
   public void onItemSelected(AdapterView<?> parent, View v, int position, long id) {
-    switch(position) {
-      case 0:
-        break;
-      case 1:
-        break;
-      case 2:
-        break;
+    String item = parent.getItemAtPosition(position).toString();
+    if(item != getBluetoothName()) {
+      sAddress = item;
+      Log.d(TAG, "Item = " + item);
+      Log.d(TAG, "getBluetoothName() = " + getBluetoothName());
+      Toast.makeText(getApplicationContext(), "Item selected: " + item, Toast.LENGTH_LONG).show();
+    }
+    else {
+      Log.d(TAG, "Item selected: " + getBluetoothName());
     }
   }
 
+  @Override
   public void onNothingSelected(AdapterView<?> parent) { }
 
 }

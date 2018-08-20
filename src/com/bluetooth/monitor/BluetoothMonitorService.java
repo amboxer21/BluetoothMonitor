@@ -22,6 +22,8 @@ public class BluetoothMonitorService extends Service {
   private static boolean is_screen_off = true;
 	private static final String TAG = "BluetoothMonitorService";
 
+  public  static final int MSG_STRING = 0;
+
   @Override
   public IBinder onBind(Intent intent) {
     return mMessenger.getBinder();
@@ -33,13 +35,16 @@ public class BluetoothMonitorService extends Service {
     Log.d(TAG,"onTaskRemoved()");
   }
  
-  public void onCreate(Context context, Intent intent) {
+  public void onCreate(Context context, Intent intent) throws NullPointerException {
     try {
       if(intent.getAction() != null) {
         intent = new Intent(context, BluetoothMonitor.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         context.startActivity(intent);
       }
+    }
+    catch(NullPointerException e) {
+      Log.d(TAG, "onCreate Null Pointer Exception e => " + e.toString());
     }
     catch(Exception e) {
       e.printStackTrace();
@@ -48,32 +53,17 @@ public class BluetoothMonitorService extends Service {
 
   @Override
   public int onStartCommand(Intent intent, int flags, int startId) {
-    Log.d("BluetoothMonitorService", "Service started.");
-
-    Bundle extras = intent.getExtras(); 
-
-    if(extras != null) {
-      if(extras.getString("state").equals("on")) {
-        is_screen_off = true;
-        Log.d("BluetoothMonitorService is_screen_off", "true");
-      }
-      else {
-        is_screen_off = false;
-        Log.d("BluetoothMonitorService is_screen_off", "false");
-      }
-    }
+    Log.d(TAG, "Service started.");
     return Service.START_STICKY;
   }
 
   class IncomingHandler extends Handler {
+
     @Override
     public void handleMessage(Message msg) {
       switch (msg.what) {
         case 0:
-          if(msg.obj.toString().equals("off")) {
-            Toast.makeText(getApplicationContext(), msg.obj.toString(), Toast.LENGTH_SHORT).show();
-          }
-          else if(msg.obj.toString().equals("on")) {
+          if(msg.obj.toString().equals("updated")) {
             Toast.makeText(getApplicationContext(), msg.obj.toString(), Toast.LENGTH_SHORT).show();
           }
         break;

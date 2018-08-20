@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+  <string name="update_button">Update</string>
   <string name="app_name">BluetoothMonitor</string>
   <string name="timer_duration">Timer Duration in Seconds</string>
 </resources>

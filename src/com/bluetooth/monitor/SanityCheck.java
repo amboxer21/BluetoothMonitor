@@ -6,6 +6,7 @@ import java.util.regex.Pattern;
 import android.content.Intent;
 import android.content.Context;
 
+import android.util.Log;
 import android.app.Activity;
 import android.widget.Toast;
 
@@ -17,6 +18,10 @@ public class SanityCheck {
   private static Activity activity;
 
   private static boolean canStartVal;
+
+  private static String tag(String method_name) {
+    return "BluetoothMonitor SanityCheck() " + method_name;
+  }
 
   public SanityCheck(Activity activity) {
     this.activity = activity;
@@ -34,6 +39,25 @@ public class SanityCheck {
     canStartVal = start;
   }
 
+  public static boolean isEmpty(String duration) {
+    if(duration == null) {
+      Log.d(tag("isEmpty"), "isEmpty(null)");
+      canStartVal = false;
+      return true;
+    }
+    else if(duration.length() == 0) {
+      toast("Duration cannot be empty!");
+      Log.d(tag("isEmpty"), "isEmpty(true)");
+      canStartVal = false;
+      return true;
+    } 
+    else {
+      Log.d(tag("isEmpty"), "!isEmpty(false)");
+      canStartVal = true;
+      return false;
+    }
+  }
+
   public static boolean isLengthCorrect(String string, int length, String message) {
     if(string.length() == length) {
       canStartVal = true;
@@ -46,8 +70,8 @@ public class SanityCheck {
     }
   }
 
-  public static boolean isGreaterThan(int duration, int number, String message) {
-    if(duration > number) {
+  public static boolean isGreaterThan(String duration, int number, String message) {
+    if(Integer.parseInt(duration) > number) {
       toast(message);
       canStartVal = false;
       return true;
@@ -58,8 +82,8 @@ public class SanityCheck {
     }
   }
 
-  public static boolean isLessThan(int duration, int number, String message) {
-    if(duration < number) {
+  public static boolean isLessThan(String duration, int number, String message) {
+    if(Integer.parseInt(duration) < number) {
       toast(message);
       canStartVal = false;
       return true;
