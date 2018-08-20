@@ -56,6 +56,7 @@ public class BluetoothMonitor extends Activity implements OnItemSelectedListener
   private BluetoothDevice bluetoothDevice;
   private DatabaseHandler databaseHandler;
   private BluetoothAdapter bluetoothAdapter;
+  private BluetoothMonitorService bluetoothMonitorService;
 
   private long backPressedTime = 0;
   private final String TAG = "BluetoothMonitor BluetoothMonitor()";
@@ -142,6 +143,7 @@ public class BluetoothMonitor extends Activity implements OnItemSelectedListener
     duration  = (EditText)findViewById(R.id.edit_timer_duration);
 
     sAddress = getBluetoothName();
+    bluetoothMonitorService = new BluetoothMonitorService();
 
     RelativeLayout mView = (RelativeLayout) findViewById(R.id.bluetooth_monitor);
     sanityCheck = new SanityCheck(this);
@@ -220,11 +222,15 @@ public class BluetoothMonitor extends Activity implements OnItemSelectedListener
         Log.d(TAG, "Updating db with -> sAddressDb = " + sAddress + ": sDurationDb = " + sDuration);
         Toast.makeText(getApplicationContext(), "Updating database.", Toast.LENGTH_LONG).show();
         databaseHandler.updateBluetoothMonitorDatabase(new BluetoothMonitorDatabase(1, sAddress, Integer.parseInt(sDuration)));
+        bluetoothMonitorService.stopTimer();
+        bluetoothMonitorService.startTimer(Integer.parseInt(sDuration));
       }
       else {
         Log.d(TAG, "Creating db with -> sAddressDb = " + sAddress + ": sDurationDb = " + sDuration);
         Toast.makeText(getApplicationContext(), "Creating database.", Toast.LENGTH_LONG).show();
         databaseHandler.addBluetoothMonitorDatabase(new BluetoothMonitorDatabase(1, sAddress, Integer.parseInt(sDuration)));
+        bluetoothMonitorService.stopTimer();
+        bluetoothMonitorService.startTimer(Integer.parseInt(sDuration));
       }
     }
 
