@@ -31,18 +31,20 @@ import android.widget.AdapterView.OnItemSelectedListener;
 public class BluetoothMonitor extends Activity implements OnItemSelectedListener {
 
   private static Spinner dropdown;
+  private static EditText duration;
+
   private static ArrayAdapter adapter;
+  private static Intent bluetoothMonitorIntent;
   private static BluetoothDevice bluetoothDevice;
+  private static DatabaseHandler databaseHandler;
   private static BluetoothAdapter bluetoothAdapter;
 
   private boolean mBound;
   private boolean message;
+
   private Messenger mService = null;
   private static long backPressedTime = 0;
-  private static Intent bluetoothMonitorIntent;
-
   private static String bluetoothMacAddress = "";
-
   private static final String TAG = "BluetoothMonitor";
 
   private BroadcastReceiver BluetoothMonitorReceiver = new BroadcastReceiver() {
@@ -65,20 +67,28 @@ public class BluetoothMonitor extends Activity implements OnItemSelectedListener
       }
       if(action.equals(BluetoothDevice.ACTION_ACL_CONNECTED)) {
         bluetoothDevice = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+        AppendDeviceToList(bluetoothDeviceName);
         Toast.makeText(context, "Connected to "+bluetoothDevice.getName(), Toast.LENGTH_SHORT).show();
-				adapter.add(bluetoothDevice.getName());
-				adapter.notifyDataSetChanged();
-				dropdown.setAdapter(adapter);
       }
       else if(action.equals(BluetoothDevice.ACTION_ACL_DISCONNECTED)) {
         bluetoothDevice = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+				removeDeviceFromList(bluetoothDevice.getName());
         Toast.makeText(context, "Disconnected from "+bluetoothDevice.getName(), Toast.LENGTH_SHORT).show();
-				adapter.remove(bluetoothDevice.getName());
-				adapter.notifyDataSetChanged();
-				dropdown.setAdapter(adapter);
       }
     }
   };
+
+  private String AppendDeviceToList(String bluetoothDeviceName) {
+		adapter.add(bluetoothDeviceName);
+		adapter.notifyDataSetChanged();
+		dropdown.setAdapter(adapter);
+  }
+
+  private String removeDeviceFromList(String bluetoothDeviceName) {
+		adapter.remove(bluetoothDeviceName);
+		adapter.notifyDataSetChanged();
+		dropdown.setAdapter(adapter);
+  }
 
   private String getBluetoothMacAddress() {
     return BluetoothAdapter.getDefaultAdapter().getAddress().toString();
@@ -109,6 +119,8 @@ public class BluetoothMonitor extends Activity implements OnItemSelectedListener
       message = savedInstanceState.getBoolean("message");
     }
 
+    databaseHandler = new DatabaseHandler(getApplicationContext());
+
     Intent serviceIntent = new Intent(this, BluetoothMonitorService.class);
     startService(serviceIntent);
 
@@ -120,12 +132,42 @@ public class BluetoothMonitor extends Activity implements OnItemSelectedListener
     registerReceiver(BluetoothMonitorReceiver, filters);
 
     dropdown = (Spinner)findViewById(R.id.device_list_menu);
+    duration = (EditText)findViewById(R.id.edit_timer_duration);
+
     dropdown.setOnItemSelectedListener(this);
     List<String> options = new ArrayList<String>();
     options.add(getBluetoothName());
     adapter  = new ArrayAdapter<String>(this, R.layout.device_list, R.id.device_list_textview, options);
     dropdown.setAdapter(adapter);
+
+    configure.setOnClickListener(new OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        entrySanityCheck();
+        getSetDatabaseInfo(v);
+      }
+    });
   }
+
+  public void entrySanityCheck() {
+    try {
+      sDuration = duration.getText().toString();
+    }
+    catch(Exception e) {
+      e.printStackTrace();
+      Log.e(TAG, "entrySanityCheck() Exception e => " + e.getMessage());
+    }
+    if(SanityCheck.isEmpty(sAppPassword,"Password is empty.")) {
+      return;
+    }
+    else if(SanityCheck.isLessThan(sDuration,300,"Duration must be greater than 1 hour!") {
+      return;
+    }
+    else {
+      //databaseHandler.addFlashLightDatabase(new FlashLightDatabase(1, "yes", , sDuration));
+    }
+  }
+
 
   @Override
   public void onBackPressed() {
@@ -142,13 +184,10 @@ public class BluetoothMonitor extends Activity implements OnItemSelectedListener
   public void onItemSelected(AdapterView<?> parent, View v, int position, long id) {
     switch(position) {
       case 0:
-        // Whatever you want to happen when the first item gets selected
         break;
       case 1:
-        // Whatever you want to happen when the second item gets selected
         break;
       case 2:
-        // Whatever you want to happen when the thrid item gets selected
         break;
     }
   }
