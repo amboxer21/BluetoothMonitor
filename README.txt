@@ -1,7 +1,7 @@
 # BluetoothMonitor
 
 [Description]
-Monitor the bluetooth state on android
+Monitors the bluetooth device you select from the drop down list and will shutdown after the specified duration once you disconnect from that device.
 
 [Brief]
 
