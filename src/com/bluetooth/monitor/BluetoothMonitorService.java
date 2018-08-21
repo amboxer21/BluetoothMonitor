@@ -90,7 +90,7 @@ public class BluetoothMonitorService extends Service {
   @Override
   public int onStartCommand(Intent intent, int flags, int startId) {
     Log.d(TAG, "Service started.");
-		databaseHandler = new DatabaseHandler(this);
+    databaseHandler = new DatabaseHandler(this);
     return Service.START_STICKY;
   }
 
