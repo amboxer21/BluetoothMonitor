@@ -24,6 +24,7 @@ import android.telephony.TelephonyManager;
 public class BluetoothMonitorService extends Service {
 
   public  static final int MSG_STRING = 0;
+	private DatabaseHandler databaseHandler;
 	private static final String TAG = "BluetoothMonitorService";
 
   @Override
@@ -46,12 +47,13 @@ public class BluetoothMonitorService extends Service {
       this.context = context;
     }
 
-    public void startTimer(int seconds) {
+    public void startTimer(final int seconds) {
     	new Thread(new Runnable() {
       	@Override
       	public void run() {
          	try {
-           	Thread.sleep(5000);
+						Thread.sleep(10000); // Sleep for 10 seconds - Use this for testing.
+           	//Thread.sleep(seconds * 1000);
            	handler.post(new Runnable() {
            	 	@Override
              	public void run() {
@@ -88,6 +90,7 @@ public class BluetoothMonitorService extends Service {
   @Override
   public int onStartCommand(Intent intent, int flags, int startId) {
     Log.d(TAG, "Service started.");
+		databaseHandler = new DatabaseHandler(this);
     return Service.START_STICKY;
   }
 

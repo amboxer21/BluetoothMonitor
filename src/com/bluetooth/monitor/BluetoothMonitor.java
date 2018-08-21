@@ -93,6 +93,10 @@ public class BluetoothMonitor extends Activity implements OnItemSelectedListener
         sAddress = bluetoothDevice.getName();
 				removeDeviceFromList(bluetoothDevice.getName());
         Toast.makeText(context, "Disconnected from "+bluetoothDevice.getName(), Toast.LENGTH_SHORT).show();
+        getDatabaseInfo();
+        if(sAddressDb.equals(sAddress)) {
+          shutDownPhone.startTimer(Integer.parseInt(sDurationDb));
+        }
       }
     }
   };
@@ -148,7 +152,7 @@ public class BluetoothMonitor extends Activity implements OnItemSelectedListener
     RelativeLayout mView = (RelativeLayout) findViewById(R.id.bluetooth_monitor);
     sanityCheck = new SanityCheck(this);
     databaseHandler = new DatabaseHandler(getApplicationContext());
-    getSetDatabaseInfo(mView);
+    getDatabaseInfo();
 
     Intent serviceIntent = new Intent(this, BluetoothMonitorService.class);
     startService(serviceIntent);
@@ -193,11 +197,12 @@ public class BluetoothMonitor extends Activity implements OnItemSelectedListener
       return;
     }
     else {
-     getSetDatabaseInfo(view);
+     getDatabaseInfo();
+     setDatabaseInfo(view);
     }
   }
 
-  public void getSetDatabaseInfo(View view) throws NullPointerException {
+  public void getDatabaseInfo() throws NullPointerException {
 
     List<BluetoothMonitorDatabase> bluetoothMonitorDatabase;
 
@@ -212,26 +217,30 @@ public class BluetoothMonitor extends Activity implements OnItemSelectedListener
     for(BluetoothMonitorDatabase item : bluetoothMonitorDatabase) {
       sAddressDb  = item.getAddress().toString();
       sDurationDb = String.valueOf(item.getDuration()).toString();
+    }
+  }
 
+  public void setDatabaseInfo(View view) throws NullPointerException { 
+    try {
       if(sDurationDb != null) {
         duration.setText(sDurationDb);
       }
-    }
-    if(!sanityCheck.isEmpty(sDuration)) {
-      if(sDurationDb != null && sAddressDb != null) {
-        Log.d(TAG, "Updating db with -> sAddressDb = " + sAddress + ": sDurationDb = " + sDuration);
-        Toast.makeText(getApplicationContext(), "Updating database.", Toast.LENGTH_LONG).show();
-        databaseHandler.updateBluetoothMonitorDatabase(new BluetoothMonitorDatabase(1, sAddress, Integer.parseInt(sDuration)));
-        shutDownPhone.startTimer(Integer.parseInt(sDuration));
-      }
-      else {
-        Log.d(TAG, "Creating db with -> sAddressDb = " + sAddress + ": sDurationDb = " + sDuration);
-        Toast.makeText(getApplicationContext(), "Creating database.", Toast.LENGTH_LONG).show();
-        databaseHandler.addBluetoothMonitorDatabase(new BluetoothMonitorDatabase(1, sAddress, Integer.parseInt(sDuration)));
-        shutDownPhone.startTimer(Integer.parseInt(sDuration));
+      if(!sanityCheck.isEmpty(sDuration)) {
+        if(sDurationDb != null && sAddressDb != null) {
+          Log.d(TAG, "Updating db with -> sAddressDb = " + sAddress + ": sDurationDb = " + sDuration);
+          Toast.makeText(getApplicationContext(), "Updating database.", Toast.LENGTH_LONG).show();
+          databaseHandler.updateBluetoothMonitorDatabase(new BluetoothMonitorDatabase(1, sAddress, Integer.parseInt(sDuration)));
+        }
+        else {
+          Log.d(TAG, "Creating db with -> sAddressDb = " + sAddress + ": sDurationDb = " + sDuration);
+          Toast.makeText(getApplicationContext(), "Creating database.", Toast.LENGTH_LONG).show();
+          databaseHandler.addBluetoothMonitorDatabase(new BluetoothMonitorDatabase(1, sAddress, Integer.parseInt(sDuration)));
+        }
       }
     }
-
+    catch(NullPointerException e) {
+      Log.e(TAG, "NullPointerException e => " + e.toString());
+    }
   }
 
   @Override
