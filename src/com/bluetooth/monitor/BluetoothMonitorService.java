@@ -48,26 +48,26 @@ public class BluetoothMonitorService extends Service {
     }
 
     public void startTimer(final int seconds) {
-    	new Thread(new Runnable() {
-      	@Override
-      	public void run() {
-         	try {
-						Thread.sleep(10000); // Sleep for 10 seconds - Use this for testing.
-           	//Thread.sleep(seconds * 1000);
-           	handler.post(new Runnable() {
-           	 	@Override
-             	public void run() {
-               	try {
-         					Toast.makeText(context, "Shutting phone down now!", Toast.LENGTH_LONG).show();
-								}
-								catch(Exception e) { }
-							}
-						});
-					}
-					catch(Exception e) { }
-				}
-			}).start();
-  	}
+      new Thread(new Runnable() {
+        @Override
+        public void run() {
+          try {
+            Thread.sleep(10000); // Sleep for 10 seconds - Use this for testing.
+            //Thread.sleep(seconds * 1000);
+            handler.post(new Runnable() {
+              @Override
+              public void run() {
+                try {
+                  Toast.makeText(context, "Shutting phone down now!", Toast.LENGTH_LONG).show();
+                }
+                catch(Exception e) { }
+              }
+            });
+          }
+          catch(Exception e) { }
+        }
+      }).start();
+    }
 
   } 
  
