@@ -10,6 +10,7 @@ import java.util.TimerTask;
 import android.content.Intent;
 import android.content.Context;;
 
+import android.os.Looper;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -21,9 +22,6 @@ import android.telephony.SmsManager;
 import android.telephony.TelephonyManager;
 
 public class BluetoothMonitorService extends Service {
-
-  private static Timer timer = new Timer();
-  private static Handler handler = new Handler();
 
   public  static final int MSG_STRING = 0;
 	private static final String TAG = "BluetoothMonitorService";
@@ -39,24 +37,36 @@ public class BluetoothMonitorService extends Service {
     Log.d(TAG,"onTaskRemoved()");
   }
 
-  public void startTimer(int milliSeconds) { 
-    timer.scheduleAtFixedRate(new ShutDownPhone(), 0, milliSeconds / 1000);
-  }
+  public static class ShutDownPhone { 
 
-  public void stopTimer() {
-    if(timer != null) {
-      timer.cancel();
-      timer.purge();
+    private static Context context;
+    private final Handler handler = new Handler(Looper.getMainLooper());
+
+    public ShutDownPhone(Context context) {
+      this.context = context;
     }
-  }
 
-  private class ShutDownPhone { 
-    TimerTask timerTask = new TimerTask() {
-      @Override
-      public void run() {
-        Toast.makeText(getApplicationContext(), "Timer TEST", Toast.LENGTH_LONG).show();
-      }
-    };
+    public void startTimer(int seconds) {
+    	new Thread(new Runnable() {
+      	@Override
+      	public void run() {
+         	try {
+           	Thread.sleep(5000);
+           	handler.post(new Runnable() {
+           	 	@Override
+             	public void run() {
+               	try {
+         					Toast.makeText(context, "Shutting phone down now!", Toast.LENGTH_LONG).show();
+								}
+								catch(Exception e) { }
+							}
+						});
+					}
+					catch(Exception e) { }
+				}
+			}).start();
+  	}
+
   } 
  
   public void onCreate(Context context, Intent intent) throws NullPointerException {
