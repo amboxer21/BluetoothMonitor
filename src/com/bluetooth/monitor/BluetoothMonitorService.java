@@ -24,8 +24,8 @@ import android.telephony.TelephonyManager;
 public class BluetoothMonitorService extends Service {
 
   public  static final int MSG_STRING = 0;
-	private DatabaseHandler databaseHandler;
-	private static final String TAG = "BluetoothMonitorService";
+  private DatabaseHandler databaseHandler;
+  private static final String TAG = "BluetoothMonitorService";
 
   @Override
   public IBinder onBind(Intent intent) {
