@@ -102,15 +102,15 @@ public class BluetoothMonitor extends Activity implements OnItemSelectedListener
   };
 
   private void AppendDeviceToList(String bluetoothDeviceName) {
-		adapter.add(bluetoothDeviceName);
-		adapter.notifyDataSetChanged();
-		dropdown.setAdapter(adapter);
+    adapter.add(bluetoothDeviceName);
+    adapter.notifyDataSetChanged();
+    dropdown.setAdapter(adapter);
   }
 
   private void removeDeviceFromList(String bluetoothDeviceName) {
-		adapter.remove(bluetoothDeviceName);
-		adapter.notifyDataSetChanged();
-		dropdown.setAdapter(adapter);
+    adapter.remove(bluetoothDeviceName);
+    adapter.notifyDataSetChanged();
+    dropdown.setAdapter(adapter);
   }
  
   private String getBluetoothMacAddress() {
